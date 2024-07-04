@@ -1,0 +1,29 @@
+import socket
+from rplidar import RPLidar
+
+# Configuration
+PORT_NAME = '/dev/ttyUSB0'  # Replace with your Lidar port
+HOST = '192.168.1.2'        # IP address of the onboard system
+PORT = 12345                # Port number for communication
+
+def main():
+    lidar = RPLidar(PORT_NAME)
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection.connect((HOST, PORT))
+
+    try:
+        for scan in lidar.iter_scans():
+            data = []
+            for (_, angle, distance) in scan:
+                data.append((angle, distance))
+            # Sending data to the onboard system
+            connection.sendall(str(data).encode('utf-8'))
+    except KeyboardInterrupt:
+        print('Stopping.')
+    finally:
+        lidar.stop()
+        lidar.disconnect()
+        connection.close()
+
+if __name__ == '__main__':
+    main()
